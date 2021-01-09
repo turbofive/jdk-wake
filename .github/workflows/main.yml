@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  watch:
+    types: [ started ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    if: github.actor == github.event.repository.owner.login
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Prepare workspace
+      uses: sifive/wit/actions/wit@master
+      with:
+        command: init
+        arguments: |
+          workspace
+          -a git@github.com:chipsalliance/rocket-chip.git::4c66d838
+          -a git@github.com:turbofive/scala.git
+        force_github_https: true
+        http_auth_username: davidmlw
+        http_auth_token: ${{ secrets.githubpass }}
+
+    - name: init workspace
+      uses: ./
+      with:
+        workspace: workspace
+        command: --init .
+
+    - name: Build workspace
+      uses: ./
+      with:
+        workspace: workspace
+        command: -x rocketchipScalaModule.compileScalaModule
